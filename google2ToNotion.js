@@ -10,7 +10,6 @@ function convertToISO(dateStr) {
   const parts = dateStr.split("/");
   if (parts.length !== 3) return dateStr; // if unexpected format, return as-is
   let [day, month, year] = parts;
-  // If year is two digits, assume it’s in the 2000s.
   if (year.length === 2) {
     year = "20" + year;
   }
@@ -46,7 +45,7 @@ async function checkIfMeetingExists(meetingId) {
 }
 
 // Function to add one task row to Notion
-async function addTaskToNotion(meetingId, organizerEmail, participants, task, responsible, deadline, status = "Pending") {
+async function addTaskToNotion(meetingId, organizerEmail, participants, task, responsible, deadline, date, status = "Pending") {
   try {
     const payload = {
       parent: { database_id: NOTION_DATABASE_ID },
@@ -69,6 +68,9 @@ async function addTaskToNotion(meetingId, organizerEmail, participants, task, re
         "Deadline": {
           date: { start: convertToISO(deadline) }
         },
+        "Date": {
+          date: { start: convertToISO(date) }
+        },
         "Status": {
           select: { name: status }
         }
@@ -83,7 +85,8 @@ async function addTaskToNotion(meetingId, organizerEmail, participants, task, re
       }
     });
 
-    console.log(`✅ Added task "${task}" for Meeting ID ${meetingId} to Notion.`);
+    console.log(`✅ Added task "${task}" for Meeting ID ${meetingId} with Meeting Date ${date} to Notion.`);
+
   } catch (error) {
     console.error("Error adding data to Notion:", error.response?.data || error.message);
   }
@@ -96,29 +99,27 @@ async function syncTranscriptDataToNotion(transcript) {
     return;
   }
 
-  // Extract meeting-level details
   const meetingId = transcript.id;
   const organizerEmail = transcript.organizer_email;
   const participants = Array.isArray(transcript.participants)
     ? transcript.participants.join(", ")
     : transcript.participants;
+  const date = transcript.date ? convertToISO(transcript.date) : "";
 
-  // Check if a meeting with this Meeting ID already exists
   const meetingExists = await checkIfMeetingExists(meetingId);
   if (meetingExists) {
     console.log(`Meeting ID ${meetingId} already exists in Notion. Skipping duplicate entry.`);
     return;
   }
-  
-  // Process each task in the action_items array
+
   if (transcript.action_items && Array.isArray(transcript.action_items)) {
     for (const item of transcript.action_items) {
       const task = item.task || "";
       const responsible = item.responsiblePerson || "";
       const deadline = item.deadline || "";
-      // Status isn't provided in the data; default to "Pending"
       const status = "Pending";
-      await addTaskToNotion(meetingId, organizerEmail, participants, task, responsible, deadline, status);
+
+      await addTaskToNotion(meetingId, organizerEmail, participants, task, responsible, deadline, date, status);
     }
   } else {
     console.log(`No action items found for Meeting ID ${meetingId}.`);
