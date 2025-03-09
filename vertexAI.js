@@ -138,7 +138,7 @@ async function fetchCompleteFinalData(storedTranscript) {
     if (response.data.transcripts[i]) {
       response.data.transcripts[i].meeting_summary = summaryResult.meetingSummary;
       response.data.transcripts[i].action_items = summaryResult.actionItems;
-
+      //  console.log(response.data.transcripts[i]);
       // code from google.js to add summary and task item for all clients
       await createTableAndAddData(response.data.transcripts[i]);
       // code from google2.js where all the task of each client are concatenated together
@@ -162,7 +162,7 @@ async function fetchCompleteFinalData(storedTranscript) {
 }
 
 
-// fetchCompleteFinalData();
+fetchCompleteFinalData();
 
 
 // Export the function for use in other files

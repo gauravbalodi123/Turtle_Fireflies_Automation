@@ -47,7 +47,7 @@ const QUERY = `
 const variables = {
   // organizerEmail: 'balodigaurav0@gmail.com',
   // participantEmail: "kamat.gautam@gmail.com",    
-  participantEmail: process.env.participantEmail,   
+  participantEmail: "kamat.gautam@gmail.com",   
   limit: 40,
   skip: 0,
 };

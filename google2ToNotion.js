@@ -4,16 +4,10 @@ require("dotenv").config();
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ROW_WISE_TASK;
 
-// Helper function: Convert a date string in dd/mm/yy(yy) format to ISO (yyyy-mm-dd)
-function convertToISO(dateStr) {
-  if (!dateStr) return "";
-  const parts = dateStr.split("/");
-  if (parts.length !== 3) return dateStr; // if unexpected format, return as-is
-  let [day, month, year] = parts;
-  if (year.length === 2) {
-    year = "20" + year;
-  }
-  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+function convertDateToISO(dateInput) {
+  if (!dateInput) return "";
+  const dateObj = new Date(dateInput);
+  return dateObj.toISOString().split("T")[0];
 }
 
 // Function to check if a meeting with the given Meeting ID already exists in Notion
@@ -66,10 +60,10 @@ async function addTaskToNotion(meetingId, organizerEmail, participants, task, re
           rich_text: [{ text: { content: responsible } }]
         },
         "Deadline": {
-          date: { start: convertToISO(deadline) }
+          date: { start: convertDateToISO(deadline) }
         },
         "Date": {
-          date: { start: convertToISO(date) }
+          date: { start: convertDateToISO(date) }
         },
         "Status": {
           select: { name: status }
@@ -104,7 +98,7 @@ async function syncTranscriptDataToNotion(transcript) {
   const participants = Array.isArray(transcript.participants)
     ? transcript.participants.join(", ")
     : transcript.participants;
-  const date = transcript.date ? convertToISO(transcript.date) : "";
+  const date = transcript.date ? convertDateToISO(transcript.date) : "";
 
   const meetingExists = await checkIfMeetingExists(meetingId);
   if (meetingExists) {
