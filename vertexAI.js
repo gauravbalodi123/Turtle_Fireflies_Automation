@@ -162,7 +162,7 @@ async function fetchCompleteFinalData(storedTranscript) {
 }
 
 
-fetchCompleteFinalData();
+// fetchCompleteFinalData();
 
 
 // Export the function for use in other files
