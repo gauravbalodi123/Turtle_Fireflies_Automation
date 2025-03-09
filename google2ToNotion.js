@@ -10,6 +10,18 @@ function convertDateToISO(dateInput) {
   return dateObj.toISOString().split("T")[0];
 }
 
+function convertToISO(dateStr) {
+  if (!dateStr) return "";
+  const parts = dateStr.split("/");
+  if (parts.length !== 3) return dateStr; // if unexpected format, return as-is
+  let [day, month, year] = parts;
+  // If year is two digits, assume it’s in the 2000s.
+  if (year.length === 2) {
+    year = "20" + year;
+  }
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
 // Function to check if a meeting with the given Meeting ID already exists in Notion
 async function checkIfMeetingExists(meetingId) {
   try {
@@ -60,7 +72,7 @@ async function addTaskToNotion(meetingId, organizerEmail, participants, task, re
           rich_text: [{ text: { content: responsible } }]
         },
         "Deadline": {
-          date: { start: convertDateToISO(deadline) }
+          date: { start: convertToISO(deadline) }
         },
         "Date": {
           date: { start: convertDateToISO(date) }

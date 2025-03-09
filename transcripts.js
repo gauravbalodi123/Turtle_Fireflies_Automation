@@ -45,10 +45,10 @@ const QUERY = `
 
 // Define request variables
 const variables = {
-  // organizerEmail: 'balodigaurav0@gmail.com',
+  organizerEmail: 'talk@turtlefinance.in',
   // participantEmail: "kamat.gautam@gmail.com",    
-  participantEmail: "kamat.gautam@gmail.com",   
-  limit: 40,
+  // participantEmail: "kamat.gautam@gmail.com",   
+  limit: 1,
   skip: 0,
 };
 

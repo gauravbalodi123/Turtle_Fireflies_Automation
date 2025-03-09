@@ -14,6 +14,8 @@ const auth = new google.auth.GoogleAuth({
 // Configuration: adjust these values if needed
 const spreadsheetId = process.env.spreadsheetId; // Your Google Sheet ID
 const sheetName = process.env.SheetName3;        // e.g., "Sheet3"
+console.log("Sheet Name:", sheetName); // Should not be undefined or empty
+
 
 // Define the header row with 'Days since last call'
 const headerRow = [
@@ -28,28 +30,29 @@ const headerRow = [
   'Status'
 ];
 
+const formatDate = (timestamp) => {
+  if (!timestamp) return "";
+  const date = new Date(Number(timestamp)); // Convert timestamp to date
+  return date.toLocaleDateString("en-GB"); // Format: DD/MM/YY
+};
+
 async function createTableAndAddData2(transcriptData) {
   const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() });
   console.log("Spreadsheet ID:", spreadsheetId);
 
-  // Build base values from transcriptData
   const newMeetingId = transcriptData.id;
   const newOrganizerEmail = transcriptData.organizer_email;
   const newParticipants = transcriptData.participants ? transcriptData.participants.join(", ") : '';
-  const newDate = transcriptData.date || ''; // Date is in column D
+  const newDate = formatDate(transcriptData.date); // Convert to DD/MM/YY format
 
   try {
-    // 1. Retrieve the entire sheet data (columns A:Z)
     const sheetDataResponse = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: `${sheetName}!A:Z`
     });
     const allRows = sheetDataResponse.data.values || [];
 
-    // 2. Check if the header exists
     let headerExists = allRows.length > 0 && allRows[0].some(cell => cell.trim() !== "");
-
-    // 3. If no header exists, write the header first
     if (!headerExists) {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
@@ -60,7 +63,6 @@ async function createTableAndAddData2(transcriptData) {
       console.log("Sheet was empty. Added header row.");
     }
 
-    // 4. Check if the meeting ID already exists
     for (let i = 1; i < allRows.length; i++) {
       if (allRows[i][0] && allRows[i][0].trim() === newMeetingId.trim()) {
         console.log(`Meeting ID ${newMeetingId} already exists in row ${i + 1}. Skipping insertion.`);
@@ -68,16 +70,13 @@ async function createTableAndAddData2(transcriptData) {
       }
     }
 
-    // 5. Determine the last row index
     const lastRowIndex = allRows.length;
     console.log(`New rows will be inserted starting at row ${lastRowIndex + 1}.`);
 
-    // 6. Retrieve the sheet's grid ID
     const spreadsheetMeta = await sheets.spreadsheets.get({ spreadsheetId, includeGridData: false });
     const sheetMeta = spreadsheetMeta.data.sheets.find(s => s.properties.title === sheetName);
     const sheetId = sheetMeta.properties.sheetId;
 
-    // 7. Insert blank rows
     const insertRequest = {
       requests: [{
         insertDimension: {
@@ -90,23 +89,21 @@ async function createTableAndAddData2(transcriptData) {
 
     console.log(`Inserted ${transcriptData.action_items.length} blank row(s).`);
 
-    // 8. Build new rows with formulas
     const newRows = transcriptData.action_items.map((item, index) => {
-      const rowNumber = lastRowIndex + index + 1; // Row number in the sheet (1-based)
+      const rowNumber = lastRowIndex + index + 1;
       return [
         newMeetingId,
         newOrganizerEmail,
         newParticipants,
         newDate,  
         item.task,
-        newDate ? `=TODAY()-D${rowNumber}` : "", // Formula for "Days since last call"
+        newDate ? `=IF(D${rowNumber}="", "", TODAY() - TO_DATE(D${rowNumber}))` : "", // ✅ Fixed formula
         item.responsiblePerson,
         item.deadline || '',
         "pending"
       ];
     });
 
-    // 9. Update the new rows in the sheet
     const updateRange = `${sheetName}!A${lastRowIndex + 1}:I${lastRowIndex + newRows.length}`;
     await sheets.spreadsheets.values.update({
       spreadsheetId,
@@ -117,7 +114,6 @@ async function createTableAndAddData2(transcriptData) {
 
     console.log(`Data inserted into rows ${lastRowIndex + 1} to ${lastRowIndex + newRows.length}.`);
 
-    // 10. Apply dropdown validation for the Status column
     const dataValidationRequest = {
       requests: [{
         setDataValidation: {
@@ -125,7 +121,7 @@ async function createTableAndAddData2(transcriptData) {
             sheetId,
             startRowIndex: lastRowIndex,
             endRowIndex: lastRowIndex + newRows.length,
-            startColumnIndex: 8, // Column I (0-indexed)
+            startColumnIndex: 8,
             endColumnIndex: 9
           },
           rule: {
@@ -144,5 +140,7 @@ async function createTableAndAddData2(transcriptData) {
     console.error('Error writing to Google Sheets:', error.message);
   }
 }
+
+module.exports = { createTableAndAddData2 };
 
 module.exports = { createTableAndAddData2 };
