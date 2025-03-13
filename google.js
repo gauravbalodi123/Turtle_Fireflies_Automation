@@ -42,7 +42,7 @@ async function createTableAndAddData(transcriptData) {
     transcriptData.meeting_attendees
       ? transcriptData.meeting_attendees.map(attendee => attendee.email).join(", ")
       : '',
-    new Date(transcriptData.date).toLocaleString(),
+    new Date(transcriptData.date).toLocaleDateString("en-GB"),
     transcriptData.speakers ? transcriptData.speakers.map(speaker => speaker.name).join(", ") : '',
     transcriptData.meeting_summary,
     transcriptData.action_items
