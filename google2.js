@@ -14,7 +14,7 @@ const auth = new google.auth.GoogleAuth({
 // Configuration: adjust these values if needed
 const spreadsheetId = process.env.spreadsheetId; // Your Google Sheet ID
 const sheetName = process.env.SheetName3;        // e.g., "Sheet3"
-console.log("Sheet Name:", sheetName); // Should not be undefined or empty
+console.log("Sheet Name from google2:", sheetName); // Should not be undefined or empty
 
 
 // Define the header row with 'Days since last call'

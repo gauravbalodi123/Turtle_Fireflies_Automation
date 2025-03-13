@@ -40,8 +40,9 @@ router.post("/fireflies-webhook", async (req, res) => {
             await fetchCompleteFinalData(storedTranscript);
 
             // ✅ Notion Update (Only Added This)
-            const date = transcript.transcripts[0].date;
-            const participants = transcript.transcripts[0].meeting_attendees;
+
+            const date = transcript.transcripts[0].date || null;
+            const participants = transcript.transcripts[0].meeting_attendees || [];
 
             if (date && participants.length > 0) {
                 for (const participant of participants) {
@@ -60,6 +61,9 @@ router.post("/fireflies-webhook", async (req, res) => {
                     // Add a small delay to avoid rate limits
                     await new Promise(resolve => setTimeout(resolve, 10000));
                 }
+            }
+            else{
+                console.log("Meeting attendies not present");
             }
         } catch (error) {
             console.error("Error fetching summary:", error);
