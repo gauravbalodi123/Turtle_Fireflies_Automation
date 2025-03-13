@@ -93,7 +93,7 @@ async function createTableAndAddData(transcriptData) {
     // Determine the last row index (0-indexed). For A1 notation, add 1.
     const lastRowIndex = allRows.length; // 0-indexed row count equals the number of rows
     console.log(`Current number of rows: ${allRows.length}. New row will be inserted at A1 row number ${lastRowIndex + 1}`);
-
+    console.log(new Date(transcriptData.date).toLocaleString());
     // Retrieve the sheet's grid ID using the sheet name.
     const spreadsheetMeta = await sheets.spreadsheets.get({
       spreadsheetId,

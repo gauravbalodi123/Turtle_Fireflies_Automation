@@ -113,6 +113,7 @@ async function createMeetingDataInNotion(transcriptData) {
     });
 
     console.log("✅ Meeting data added to Notion:", response.data);
+    console.log("date from google to notion to check",transcriptData.date , convertDateToISO(transcriptData.date));
   } catch (error) {
     console.error("Error adding meeting data to Notion:", error.response?.data || error.message);
   }

@@ -41,12 +41,12 @@ router.post("/fireflies-webhook", async (req, res) => {
 
             // ✅ Notion Update (Only Added This)
 
-            const date = transcript.transcripts[0].date || null;
-            const participants = transcript.transcripts[0].meeting_attendees || [];
+            const date = transcript.data.transcripts[0].date || null;
+            const participants = transcript.data.transcripts[0].meeting_attendees || [];
 
             if (date && participants.length > 0) {
                 for (const participant of participants) {
-                    if (!participant.email) continue;
+                    // if (!participant.email) continue;
 
                     console.log(`🔍 Searching Notion for: ${participant.email}`);
                     const pageId = await findNotionClientByEmail(participant.email);
