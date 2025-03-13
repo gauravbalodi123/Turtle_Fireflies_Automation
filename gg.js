@@ -1,3 +1,4 @@
+// index2.js
 const express = require("express");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
@@ -6,10 +7,8 @@ require("dotenv").config();
 const router = express.Router();
 router.use(bodyParser.json());
 // const { createTableAndAddData } = require('./google');
-const { fetchCompleteFinalData } = require("./vertexAI");
+const { fetchCompleteFinalData } = require('./vertexAI');
 
-// ✅ Import Notion functions (Only Added This)
-const { findNotionClientByEmail, updateNotionDate } = require("./dateFromFirefliesToNotion");
 
 const FIRELIES_WEBHOOK_SECRET = process.env.FIRELIES_WEBHOOK_SECRET;
 const FIRELIES_API_KEY = process.env.FIRELIES_API_KEY;
@@ -19,6 +18,8 @@ const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${FIRELIES_API_KEY}`,
 };
+
+// console.log("bdkjb");
 
 let storedTranscript = {}; // Modifiable variable
 
@@ -37,30 +38,8 @@ router.post("/fireflies-webhook", async (req, res) => {
         try {
             const transcript = await fetchTranscriptData(meetingId);
             storedTranscript = transcript;
-            await fetchCompleteFinalData(storedTranscript);
-
-            // ✅ Notion Update (Only Added This)
-            const date = transcript.transcripts[0].date;
-            const participants = transcript.transcripts[0].meeting_attendees;
-
-            if (date && participants.length > 0) {
-                for (const participant of participants) {
-                    if (!participant.email) continue;
-
-                    console.log(`🔍 Searching Notion for: ${participant.email}`);
-                    const pageId = await findNotionClientByEmail(participant.email);
-
-                    if (pageId) {
-                        console.log(`✅ Found Notion Page for ${participant.email}. Updating Date...`);
-                        await updateNotionDate(pageId, date);
-                    } else {
-                        console.log(`❌ No Notion client found for ${participant.email}`);
-                    }
-
-                    // Add a small delay to avoid rate limits
-                    await new Promise(resolve => setTimeout(resolve, 10000));
-                }
-            }
+            // console.log("Updated storedTranscript:", storedTranscript);
+            fetchCompleteFinalData(storedTranscript);
         } catch (error) {
             console.error("Error fetching summary:", error);
         }
@@ -100,6 +79,7 @@ async function fetchTranscriptData(transcriptId) {
         speaker_name
         text 
       }    
+
         }
       }`,
         variables: { transcriptId },
@@ -108,8 +88,11 @@ async function fetchTranscriptData(transcriptId) {
     try {
         const response = await axios.post(url, data, { headers: headers });
 
+        // Transform the response: replace transcript with attributes array.
         if (response.data.data.transcript) {
+            // Create an "attributes" property as an array containing the transcript data.
             response.data.data.transcripts = [response.data.data.transcript];
+            // Remove the original "transcript" property.
             delete response.data.data.transcript;
         }
 
@@ -121,9 +104,11 @@ async function fetchTranscriptData(transcriptId) {
         } else {
             console.error("Request failed:", error.message);
         }
-        throw error;
+        throw error;  // Rethrow the error after logging
     }
+
 }
+
 
 module.exports = {
     router,
